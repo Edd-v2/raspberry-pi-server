@@ -1,23 +1,56 @@
-# What this scripts does:
+
+# Scripts Overview
+
+This directory contains utility scripts to install, configure, and manage your Raspberry Pi server environment.
+
+---
 
 ## install_docker.sh
 
-- Updates your Raspberry Pi system.
+Installs Docker and Docker Compose on your Raspberry Pi.  
+Includes all required dependencies, sets up the repository, and adds your user to the docker group.
 
-- Installs all necessary packages.
+---
 
--  Docker’s official GPG key and repository.
+## install_nginx.sh
 
-- Installs Docker Engine and Docker Compose plugin.
+Installs Nginx on the host machine (if needed).  
+Useful for users who wish to use native Nginx instead of the Docker container version.
 
-- Adds your user to the docker group (so you can run docker without sudo).
+---
 
 ## start.sh
 
-- It tries to run docker compose up -d.
+Runs `docker compose up -d` to launch all services.  
+Retries up to 5 times with delays in case of failure.  
+Exits with an error if startup continues to fail.
 
-- If it fails, it retries up to 5 times, waiting 5 seconds between attempts.
+---
 
-- If after 5 tries it still fails, it exits with an error message.
+## setup_check.sh
 
-- Clean colored output to easily spot success ✅ or failure ❌.
+Basic health check script template.  
+Intended to test running services or validate setup (can be customized).
+
+---
+
+## setup_firewall.sh
+
+Configures UFW (Uncomplicated Firewall) with secure defaults.  
+Allows only SSH (22), HTTP (80), and HTTPS (443) access.  
+Denies all other incoming traffic and enables UFW.
+
+---
+
+## setup_nginx_conf.sh
+
+Copies Nginx config files to the correct location.  
+Reloads the Nginx container to apply changes if it's running.
+
+---
+
+## search_text.sh
+
+Searches recursively for a given text string in all files starting from the current directory.  
+Useful for quickly finding config references or environment variables in the project.
+
