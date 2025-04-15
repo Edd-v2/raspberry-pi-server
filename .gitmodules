@@ -1,0 +1,3 @@
+[submodule "services/rpi-dashboard"]
+	path = services/rpi-dashboard
+	url = https://github.com/Edd-v2/rpi-dashboard.git
