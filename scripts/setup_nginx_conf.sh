@@ -1,43 +1,40 @@
 #!/bin/bash
 
-echo "Setting up Nginx configuration..."
+echo "📂 Setting up Nginx configuration..."
 
-# Define source and destination
-SRC_DIR="./infra/config/nginx"
-DEST_DIR="./infra/config/nginx"
+SRC_DIR="./infra/config"
+NGINX_DIR="/etc/nginx"
+VHOST_DIR="$NGINX_DIR/conf.d"
 
-# Create destination directories if they don't exist
-mkdir -p ${DEST_DIR}/conf.d
-mkdir -p ${DEST_DIR}/html
-
-# Copy main nginx.conf
-if [ -f "${SRC_DIR}/nginx.conf" ]; then
-    echo "📄 Copying nginx.conf..."
-    cp ${SRC_DIR}/nginx.conf ${DEST_DIR}/nginx.conf
-else
-    echo "❌ nginx.conf not found in ${SRC_DIR}"
-    exit 1
+# Verifica esistenza
+if [ ! -f "$SRC_DIR/nginx.conf" ]; then
+  echo "❌ nginx.conf not found in $SRC_DIR"
+  exit 1
 fi
 
-# Copy all virtual hosts
-if [ "$(ls -A ${SRC_DIR}/conf.d/)" ]; then
-    echo "Copying virtual hosts (conf.d)..."
-    cp ${SRC_DIR}/conf.d/*.conf ${DEST_DIR}/conf.d/
+# Backup nginx.conf esistente
+sudo cp "$NGINX_DIR/nginx.conf" "$NGINX_DIR/nginx.conf.bak"
+
+# Copia nginx.conf principale
+sudo cp "$SRC_DIR/nginx.conf" "$NGINX_DIR/nginx.conf"
+
+# Crea conf.d se non esiste
+sudo mkdir -p "$VHOST_DIR"
+
+# Copia virtual hosts
+for f in "$SRC_DIR"/*.conf; do
+  filename=$(basename "$f")
+  if [ "$filename" != "nginx.conf" ]; then
+    sudo cp "$f" "$VHOST_DIR/$filename"
+    echo "→ Copied $filename to $VHOST_DIR/"
+  fi
+done
+
+# Test e reload
+echo "🔍 Testing Nginx config..."
+if sudo nginx -t; then
+  echo "✅ Nginx config OK! Reloading..."
+  sudo systemctl reload nginx
 else
-    echo "⚠️ No virtual hosts found in ${SRC_DIR}/conf.d"
+  echo "❌ Config error. Check your .conf files."
 fi
-
-# Set safe permissions
-chmod 644 ${DEST_DIR}/nginx.conf
-chmod 644 ${DEST_DIR}/conf.d/*.conf
-
-# If nginx container exists, reload it
-if docker ps --filter "name=nginx" --filter "status=running" | grep nginx; then
-    echo "🔄 Reloading Nginx container..."
-    docker exec nginx nginx -s reload
-    echo "✅ Nginx reloaded successfully!"
-else
-    echo "⚠️ Nginx container not running. It will pick up changes on next start."
-fi
-
-echo "Nginx configuration setup completed!"
